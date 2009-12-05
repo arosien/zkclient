@@ -1,5 +1,7 @@
 package org.I0Itec.zkclient;
 
+import static org.I0Itec.zkclient.Serialize.readSerializable;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -175,7 +177,9 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createPersistent(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public void createPersistent(String path, Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         create(path, serializable, CreateMode.PERSISTENT);
     }
@@ -270,7 +274,9 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #create(String, byte[], CreateMode)} and do your own serialization
      */
+    @Deprecated
     public String create(final String path, Serializable serializable, final CreateMode mode) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         if (path == null) {
             throw new NullPointerException("path must not be null.");
@@ -596,8 +602,10 @@ public class ZkClient implements Watcher {
                     // reinstall watch
                     exists(path, true);
                     try {
-                        Serializable data = readData(path, null, true);
+                        byte[] data = read(path, null, true);
                         listener.handleDataChange(path, data);
+                        Serializable s = readSerializable(data);
+                        listener.handleDataChange(path, s);
                     } catch (ZkNoNodeException e) {
                         listener.handleDataDeleted(path);
                     }
@@ -834,6 +842,7 @@ public class ZkClient implements Watcher {
      * @return
      * @deprecated Use {@link #read(String)} and do your own deserialization
      */
+    @SuppressWarnings("unchecked")
     @Deprecated
     public <T extends Serializable> T readData(String path) {
         return (T) readData(path, null);
@@ -866,6 +875,7 @@ public class ZkClient implements Watcher {
         return (T) readSerializable(data);
     }
 
+    @Deprecated
     @SuppressWarnings("unchecked")
     private <T extends Serializable> T readSerializable(byte[] data) {
         if (data == null) {
@@ -882,6 +892,11 @@ public class ZkClient implements Watcher {
         }
     }
 
+    public void writeData(String path, byte[] data) {
+        writeData(path, data, -1);
+    }
+    
+    @Deprecated
     public void writeData(String path, Serializable serializable) {
         writeData(path, serializable, -1);
     }
@@ -913,8 +928,12 @@ public class ZkClient implements Watcher {
         } while (retry);
     }
 
+    @Deprecated
     public void writeData(final String path, Serializable serializable, final int expectedVersion) {
-        final byte[] data = toByteArray(serializable);
+        writeData(path, toByteArray(serializable), expectedVersion);
+    }
+    
+    public void writeData(final String path, final byte[] data, final int expectedVersion) {
         retryUntilConnected(new Callable<Object>() {
 
             @Override

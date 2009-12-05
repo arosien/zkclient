@@ -61,7 +61,12 @@ public final class ContentWatcher<T extends Serializable> implements IZkDataList
     @SuppressWarnings("unchecked")
     @Override
     public void handleDataChange(String dataPath, Serializable serializable) {
-        setContent((T) serializable);
+        // Deprecated, haandleDataChange(String, byte[]) gets called.
+    }
+    
+    @Override
+    public void handleDataChange(String dataPath, byte[] data) {
+        setContent(Serialize.<T>readSerializable(data));
     }
 
     @Override

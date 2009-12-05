@@ -14,6 +14,9 @@ import java.io.Serializable;
  */
 public interface IZkDataListener {
 
+    public void handleDataChange(String dataPath, byte[] data) throws Exception;
+
+    @Deprecated
     public void handleDataChange(String dataPath, Serializable data) throws Exception;
 
     public void handleDataDeleted(String dataPath) throws Exception;

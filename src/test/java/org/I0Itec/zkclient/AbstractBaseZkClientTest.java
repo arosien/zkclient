@@ -105,16 +105,22 @@ public abstract class AbstractBaseZkClientTest {
 
             @Override
             public void handleDataChange(String dataPath, Serializable data) throws Exception {
-                holder.set((String) data);
+                // Deprecated, handleDataChange(String, byte[]) is called.
+            }
+
+            @Override
+            public void handleDataChange(String dataPath, byte[] data) throws Exception {
+                holder.set(new String(data));
             }
 
             @Override
             public void handleDataDeleted(String dataPath) throws Exception {
                 holder.set(null);
             }
+
         };
         _client.subscribeDataChanges(path, listener);
-        _client.createPersistent(path, "aaa");
+        _client.createPersistent(path, "aaa".getBytes());
 
         // wait some time to make sure the event was triggered
         String contentFromHolder = TestUtil.waitUntil("b", new Callable<String>() {
@@ -139,6 +145,11 @@ public abstract class AbstractBaseZkClientTest {
 
             @Override
             public void handleDataChange(String dataPath, Serializable data) throws Exception {
+                // Deprecated, handleDataChange(String, byte[]) is called.
+            }
+            
+            @Override
+            public void handleDataChange(String dataPath, byte[] data) throws Exception {
                 countChanged.incrementAndGet();
             }
 
