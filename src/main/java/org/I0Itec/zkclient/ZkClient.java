@@ -212,7 +212,9 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createPersistent(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public String createPersistentSequential(String path, Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         return create(path, serializable, CreateMode.PERSISTENT_SEQUENTIAL);
     }
@@ -305,6 +307,7 @@ public class ZkClient implements Watcher {
         });
     }
 
+    @Deprecated
     private byte[] toByteArray(Serializable serializable) {
         try {
             ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
@@ -330,7 +333,9 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createEphemeral(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public void createEphemeral(final String path, final Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         create(path, serializable, CreateMode.EPHEMERAL);
     }
@@ -367,7 +372,9 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createEphemeralSequential(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public String createEphemeralSequential(final String path, final Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         return create(path, serializable, CreateMode.EPHEMERAL_SEQUENTIAL);
     }
@@ -801,16 +808,52 @@ public class ZkClient implements Watcher {
             return false;
         }
     }
+    
+    public byte[] read(String path) {
+        return read(path, null);
+    }
+    
+    public byte[] read(String path, Stat stat) {
+        return read(path, stat, hasListeners(path));
+    }
 
+    private byte[] read(final String path, final Stat stat, final boolean watch) {
+        return retryUntilConnected(new Callable<byte[]>() {
+
+            @Override
+            public byte[] call() throws Exception {
+                return _connection.readData(path, stat, watch);
+            }
+        });
+    }
+
+    /**
+     * 
+     * @param <T>
+     * @param path
+     * @return
+     * @deprecated Use {@link #read(String)} and do your own deserialization
+     */
+    @Deprecated
     public <T extends Serializable> T readData(String path) {
         return (T) readData(path, null);
     }
 
+    /**
+     * 
+     * @param <T>
+     * @param path
+     * @param stat
+     * @return
+     * @deprecated Use {@link #read(String, Stat)} and do your own deserialization
+     */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T readData(String path, Stat stat) {
         return (T) readData(path, stat, hasListeners(path));
     }
-
+    
+    @Deprecated
     @SuppressWarnings("unchecked")
     private <T extends Serializable> T readData(final String path, final Stat stat, final boolean watch) {
         byte[] data = retryUntilConnected(new Callable<byte[]>() {
