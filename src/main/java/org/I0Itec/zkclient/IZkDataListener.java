@@ -16,6 +16,14 @@ public interface IZkDataListener {
 
     public void handleDataChange(String dataPath, byte[] data) throws Exception;
 
+    /**
+     * If the byte[] couldn't be deserialized then this method will not be called,
+     * but {@link #handleDataChange(String, byte[])} will/
+     * 
+     * @param dataPath
+     * @param data
+     * @throws Exception
+     */
     @Deprecated
     public void handleDataChange(String dataPath, Serializable data) throws Exception;
 

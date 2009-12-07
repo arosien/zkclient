@@ -604,8 +604,17 @@ public class ZkClient implements Watcher {
                     try {
                         byte[] data = read(path, null, true);
                         listener.handleDataChange(path, data);
-                        Serializable s = readSerializable(data);
-                        listener.handleDataChange(path, s);
+                        
+                        /*
+                         * Since using Serializable is deprecated, the calls 
+                         * below may fail.
+                         */
+                        try {
+                            Serializable s = readSerializable(data);
+                            listener.handleDataChange(path, s);
+                        } catch (ZkMarshallingError e) {
+                            // eat it
+                        }
                     } catch (ZkNoNodeException e) {
                         listener.handleDataDeleted(path);
                     }
