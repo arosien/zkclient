@@ -10,6 +10,7 @@ public class MemoryZkClientTest extends AbstractBaseZkClientTest {
     public void setUp() throws Exception {
         super.setUp();
         _client = new ZkClient(new InMemoryConnection());
+        _client.connect(Integer.MAX_VALUE);
     }
 
     @Override

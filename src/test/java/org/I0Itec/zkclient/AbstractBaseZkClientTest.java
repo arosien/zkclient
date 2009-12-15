@@ -39,7 +39,7 @@ public abstract class AbstractBaseZkClientTest {
         LOG.info("--- testUnableToConnect");
         // we are using port 4711 to avoid conflicts with the zk server that is
         // started by the Spring context
-        new ZkClient("localhost:4712", 1000);
+        ZkClient.newClient("localhost:4712").connect(1000);
     }
 
     @Test
