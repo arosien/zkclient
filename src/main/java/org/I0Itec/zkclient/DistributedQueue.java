@@ -1,5 +1,7 @@
 package org.I0Itec.zkclient;
 
+import static org.I0Itec.zkclient.Serialize.toByteArray;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -37,7 +39,7 @@ public class DistributedQueue<T extends Serializable> {
 
     public boolean offer(T element) {
         try {
-            _zkClient.createPersistentSequential(_root + "/" + ELEMENT_NAME + "-", element);
+            _zkClient.createPersistentSequential(_root + "/" + ELEMENT_NAME + "-", toByteArray(element));
         } catch (Exception e) {
             throw ExceptionUtil.convertToRuntimeException(e);
         }
@@ -89,7 +91,9 @@ public class DistributedQueue<T extends Serializable> {
                 String elementName = getSmallestElement(list);
 
                 try {
-                    return new Element<T>(_root + "/" + elementName, (T) _zkClient.readData(_root + "/" + elementName));
+                    String path = _root + "/" + elementName;
+                    return new Element<T>(path, 
+                            Serialize.<T>readSerializable(_zkClient.read(path)));
                 } catch (ZkNoNodeException e) {
                     // somebody else picked up the element first, so we have to
                     // retry with the new first element

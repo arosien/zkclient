@@ -166,13 +166,33 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createPersistent(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public void createPersistent(String path, Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         create(path, serializable, CreateMode.PERSISTENT);
     }
+    
+    /**
+     * Create a persistent node.
+     * 
+     * @param path
+     * @param data
+     * @throws ZkInterruptedException
+     *             if operation was interrupted, or a required reconnection got interrupted
+     * @throws IllegalArgumentException
+     *             if called from anything except the ZooKeeper event thread
+     * @throws ZkException
+     *             if any ZooKeeper exception occurred
+     * @throws RuntimeException
+     *             if any other exception occurs
+     */
+    public void createPersistent(String path, byte[] data) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
+        create(path, data, CreateMode.PERSISTENT);
+    }
 
     /**
-     * Create a persistent, sequental node.
+     * Create a persistent, sequential node.
      * 
      * @param path
      * @param serializable
@@ -185,9 +205,30 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createPersistent(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public String createPersistentSequential(String path, Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         return create(path, serializable, CreateMode.PERSISTENT_SEQUENTIAL);
+    }
+    
+    /**
+     * Create a persistent, sequential node.
+     * 
+     * @param path
+     * @param data
+     * @return create node's path
+     * @throws ZkInterruptedException
+     *             if operation was interrupted, or a required reconnection got interrupted
+     * @throws IllegalArgumentException
+     *             if called from anything except the ZooKeeper event thread
+     * @throws ZkException
+     *             if any ZooKeeper exception occurred
+     * @throws RuntimeException
+     *             if any other exception occurs
+     */
+    public String createPersistentSequential(String path, byte[] data) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
+        return create(path, data, CreateMode.PERSISTENT_SEQUENTIAL);
     }
 
     /**
@@ -222,13 +263,36 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #create(String, byte[], CreateMode)} and do your own serialization
      */
+    @Deprecated
     public String create(final String path, Serializable serializable, final CreateMode mode) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         if (path == null) {
             throw new NullPointerException("path must not be null.");
         }
-        final byte[] data = serializable == null ? null : toByteArray(serializable);
-
+        return create(path, toByteArray(serializable), mode);
+    }
+    
+    /**
+     * Create a node.
+     * 
+     * @param path
+     * @param data
+     * @param mode
+     * @return create node's path
+     * @throws ZkInterruptedException
+     *             if operation was interrupted, or a required reconnection got interrupted
+     * @throws IllegalArgumentException
+     *             if called from anything except the ZooKeeper event thread
+     * @throws ZkException
+     *             if any ZooKeeper exception occurred
+     * @throws RuntimeException
+     *             if any other exception occurs
+     */
+    public String create(final String path, final byte[] data, final CreateMode mode) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
+        if (path == null) {
+            throw new NullPointerException("path must not be null.");
+        }
         return retryUntilConnected(new Callable<String>() {
 
             @Override
@@ -238,6 +302,7 @@ public class ZkClient implements Watcher {
         });
     }
 
+    @Deprecated
     private byte[] toByteArray(Serializable serializable) {
         try {
             ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
@@ -263,9 +328,29 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createEphemeral(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public void createEphemeral(final String path, final Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         create(path, serializable, CreateMode.EPHEMERAL);
+    }
+    
+    /**
+     * Create an ephemeral node.
+     * 
+     * @param path
+     * @param data
+     * @throws ZkInterruptedException
+     *             if operation was interrupted, or a required reconnection got interrupted
+     * @throws IllegalArgumentException
+     *             if called from anything except the ZooKeeper event thread
+     * @throws ZkException
+     *             if any ZooKeeper exception occurred
+     * @throws RuntimeException
+     *             if any other exception occurs
+     */
+    public void createEphemeral(final String path, final byte[] data) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
+        create(path, data, CreateMode.EPHEMERAL);
     }
 
     /**
@@ -282,9 +367,30 @@ public class ZkClient implements Watcher {
      *             if any ZooKeeper exception occurred
      * @throws RuntimeException
      *             if any other exception occurs
+     * @deprecated use {@link #createEphemeralSequential(String, byte[])} and do your own serialization
      */
+    @Deprecated
     public String createEphemeralSequential(final String path, final Serializable serializable) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
         return create(path, serializable, CreateMode.EPHEMERAL_SEQUENTIAL);
+    }
+    
+    /**
+     * Create an ephemeral, sequential node.
+     * 
+     * @param path
+     * @param data
+     * @return created path
+     * @throws ZkInterruptedException
+     *             if operation was interrupted, or a required reconnection got interrupted
+     * @throws IllegalArgumentException
+     *             if called from anything except the ZooKeeper event thread
+     * @throws ZkException
+     *             if any ZooKeeper exception occurred
+     * @throws RuntimeException
+     *             if any other exception occurs
+     */
+    public String createEphemeralSequential(final String path, final byte[] data) throws ZkInterruptedException, IllegalArgumentException, ZkException, RuntimeException {
+        return create(path, data, CreateMode.EPHEMERAL_SEQUENTIAL);
     }
 
     public void process(WatchedEvent event) {
@@ -485,8 +591,19 @@ public class ZkClient implements Watcher {
                     // reinstall watch
                     exists(path, true);
                     try {
-                        Serializable data = readData(path, null, true);
+                        byte[] data = read(path, null, true);
                         listener.handleDataChange(path, data);
+                        
+                        /*
+                         * Since using Serializable is deprecated, the calls 
+                         * below may fail.
+                         */
+                        try {
+                            Serializable s = readSerializable(data);
+                            listener.handleDataChange(path, s);
+                        } catch (ZkMarshallingError e) {
+                            // eat it
+                        }
                     } catch (ZkNoNodeException e) {
                         listener.handleDataDeleted(path);
                     }
@@ -697,16 +814,53 @@ public class ZkClient implements Watcher {
             return false;
         }
     }
+    
+    public byte[] read(String path) {
+        return read(path, null);
+    }
+    
+    public byte[] read(String path, Stat stat) {
+        return read(path, stat, hasListeners(path));
+    }
 
+    private byte[] read(final String path, final Stat stat, final boolean watch) {
+        return retryUntilConnected(new Callable<byte[]>() {
+
+            @Override
+            public byte[] call() throws Exception {
+                return _connection.readData(path, stat, watch);
+            }
+        });
+    }
+
+    /**
+     * 
+     * @param <T>
+     * @param path
+     * @return
+     * @deprecated Use {@link #read(String)} and do your own deserialization
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated
     public <T extends Serializable> T readData(String path) {
         return (T) readData(path, null);
     }
 
+    /**
+     * 
+     * @param <T>
+     * @param path
+     * @param stat
+     * @return
+     * @deprecated Use {@link #read(String, Stat)} and do your own deserialization
+     */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T readData(String path, Stat stat) {
         return (T) readData(path, stat, hasListeners(path));
     }
-
+    
+    @Deprecated
     @SuppressWarnings("unchecked")
     private <T extends Serializable> T readData(final String path, final Stat stat, final boolean watch) {
         byte[] data = retryUntilConnected(new Callable<byte[]>() {
@@ -719,6 +873,7 @@ public class ZkClient implements Watcher {
         return (T) readSerializable(data);
     }
 
+    @Deprecated
     @SuppressWarnings("unchecked")
     private <T extends Serializable> T readSerializable(byte[] data) {
         if (data == null) {
@@ -735,6 +890,11 @@ public class ZkClient implements Watcher {
         }
     }
 
+    public void writeData(String path, byte[] data) {
+        writeData(path, data, -1);
+    }
+    
+    @Deprecated
     public void writeData(String path, Serializable serializable) {
         writeData(path, serializable, -1);
     }
@@ -766,8 +926,12 @@ public class ZkClient implements Watcher {
         } while (retry);
     }
 
+    @Deprecated
     public void writeData(final String path, Serializable serializable, final int expectedVersion) {
-        final byte[] data = toByteArray(serializable);
+        writeData(path, toByteArray(serializable), expectedVersion);
+    }
+    
+    public void writeData(final String path, final byte[] data, final int expectedVersion) {
         retryUntilConnected(new Callable<Object>() {
 
             @Override
