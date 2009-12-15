@@ -1,7 +1,5 @@
 package org.I0Itec.zkclient;
 
-import static org.I0Itec.zkclient.Serialize.readSerializable;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,25 +54,16 @@ public class ZkClient implements Watcher {
     // TODO PVo remove this later
     private Thread _zookeeperEventThread;
 
+    public static ZkClient newClient(String zkServers) {
+        return new ZkClient(new ZkConnection(zkServers));
+    }
+    
+    public static ZkClient newClient(String zkServers, int sessionTimeout) {
+        return new ZkClient(new ZkConnection(zkServers, sessionTimeout));
+    }
+    
     public ZkClient(IZkConnection connection) {
-        this(connection, Integer.MAX_VALUE);
-    }
-
-    public ZkClient(IZkConnection connection, int connectionTimeout) {
         _connection = connection;
-        connect(connectionTimeout, this);
-    }
-
-    public ZkClient(String zkServers, int sessionTimeout, int connectionTimeout) {
-        this(new ZkConnection(zkServers, sessionTimeout), connectionTimeout);
-    }
-
-    public ZkClient(String zkServers, int connectionTimeout) {
-        this(new ZkConnection(zkServers), connectionTimeout);
-    }
-
-    public ZkClient(String serverstring) {
-        this(serverstring, Integer.MAX_VALUE);
     }
 
     public List<String> subscribeChildChanges(String path, IZkChildListener listener) {
@@ -986,7 +975,22 @@ public class ZkClient implements Watcher {
             }
         });
     }
-
+    
+    /**
+     * Connect to ZooKeeper.
+     * 
+     * @param maxMsToWaitUntilConnected
+     * @throws ZkInterruptedException
+     *             if the connection timed out due to thread interruption
+     * @throws ZkTimeoutException
+     *             if the connection timed out
+     * @throws IllegalStateException
+     *             if the connection timed out due to thread interruption
+     */
+    public void connect(long maxMsToWaitUntilConnected) {
+        connect(maxMsToWaitUntilConnected, this);
+    }
+    
     /**
      * Connect to ZooKeeper.
      * 

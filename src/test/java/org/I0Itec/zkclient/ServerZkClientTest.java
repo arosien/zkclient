@@ -24,7 +24,8 @@ public class ServerZkClientTest extends AbstractBaseZkClientTest {
     public void setUp() throws Exception {
         super.setUp();
         _zkServer = TestUtil.startZkServer("ZkClientTest_" + _counter.addAndGet(1), 4711);
-        _client = new ZkClient("localhost:4711", 5000);
+        _client = ZkClient.newClient("localhost:4711");
+        _client.connect(5000);
     }
 
     @Override
@@ -41,7 +42,8 @@ public class ServerZkClientTest extends AbstractBaseZkClientTest {
         Gateway gateway = new Gateway(4712, 4711);
         gateway.start();
         final ZkConnection zkConnection = new ZkConnection("localhost:4712");
-        final ZkClient zkClient = new ZkClient(zkConnection, 1000);
+        final ZkClient zkClient = new ZkClient(zkConnection);
+        zkClient.connect(1000);
 
         gateway.stop();
 
@@ -66,7 +68,8 @@ public class ServerZkClientTest extends AbstractBaseZkClientTest {
     @Test(timeout = 15000)
     public void testWaitUntilConnected() throws Exception {
         LOG.info("--- testWaitUntilConnected");
-        ZkClient _client = new ZkClient("localhost:4711", 5000);
+        ZkClient _client = ZkClient.newClient("localhost:4711");
+        _client.connect(5000);
 
         _zkServer.shutdown();
 
@@ -87,7 +90,8 @@ public class ServerZkClientTest extends AbstractBaseZkClientTest {
         gateway.start();
 
         // Use a session timeout of 200ms
-        final ZkClient zkClient = new ZkClient("localhost:4712", 200, 5000);
+        final ZkClient zkClient = ZkClient.newClient("localhost:4712", 200);
+        zkClient.connect(5000);
 
         gateway.stop();
 
@@ -121,7 +125,8 @@ public class ServerZkClientTest extends AbstractBaseZkClientTest {
         Gateway gateway = new Gateway(4712, 4711);
         gateway.start();
 
-        final ZkClient disconnectedZkClient = new ZkClient("localhost:4712", sessionTimeout, 5000);
+        final ZkClient disconnectedZkClient = ZkClient.newClient("localhost:4712", sessionTimeout);
+        disconnectedZkClient.connect(5000);
         final Holder<List<String>> children = new Holder<List<String>>();
         disconnectedZkClient.subscribeChildChanges("/root", new IZkChildListener() {
 
@@ -160,7 +165,8 @@ public class ServerZkClientTest extends AbstractBaseZkClientTest {
         final Gateway gateway = new Gateway(4712, 4711);
         gateway.start();
 
-        ZkClient zkClient = new ZkClient("localhost:4712", 5000);
+        ZkClient zkClient = ZkClient.newClient("localhost:4712");
+        zkClient.connect(5000);
         zkClient.close();
 
         gateway.stop();
