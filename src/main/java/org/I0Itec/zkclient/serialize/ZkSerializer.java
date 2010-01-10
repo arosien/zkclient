@@ -3,7 +3,7 @@ package org.I0Itec.zkclient.serialize;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 
 /**
- * Zookeeper is able to store data in form of byte arrays. This interfacte is a bridge between those byte-array format
+ * Zookeeper is able to store data in form of byte arrays. This interface is a bridge between those byte-array format
  * and higher level objects.
  * 
  * @see BytesPushThroughSerializer
