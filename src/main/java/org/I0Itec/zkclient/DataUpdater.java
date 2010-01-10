@@ -6,7 +6,7 @@ package org.I0Itec.zkclient;
  * 
  * @param <T>
  */
-public interface DataUpdater<T extends Object> {
+public interface DataUpdater<T> {
 
     /**
      * Updates the current data of a znode.

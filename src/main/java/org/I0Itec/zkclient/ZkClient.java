@@ -718,18 +718,18 @@ public class ZkClient implements Watcher {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Object> T derializable(byte[] data) {
+    private <T> T deserialize(byte[] data) {
         if (data == null) {
             return null;
         }
         return (T) _zkSerializer.deserialize(data);
     }
 
-    public <T extends Object> T readData(String path) {
+    public <T> T readData(String path) {
         return (T) readData(path, false);
     }
 
-    public <T extends Object> T readData(String path, boolean returnNullIfPathNotExists) {
+    public <T> T readData(String path, boolean returnNullIfPathNotExists) {
         T data = null;
         try {
             data = (T) readData(path, null);
@@ -742,12 +742,12 @@ public class ZkClient implements Watcher {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Object> T readData(String path, Stat stat) {
+    public <T> T readData(String path, Stat stat) {
         return (T) readData(path, stat, hasListeners(path));
     }
 
     @SuppressWarnings("unchecked")
-    protected <T extends Object> T readData(final String path, final Stat stat, final boolean watch) {
+    protected <T> T readData(final String path, final Stat stat, final boolean watch) {
         byte[] data = retryUntilConnected(new Callable<byte[]>() {
 
             @Override
@@ -755,7 +755,7 @@ public class ZkClient implements Watcher {
                 return _connection.readData(path, stat, watch);
             }
         });
-        return (T) derializable(data);
+        return (T) deserialize(data);
     }
 
     public void writeData(String path, Object object) {
@@ -774,7 +774,7 @@ public class ZkClient implements Watcher {
      * @param updater
      *            Updater that creates the new contents.
      */
-    public <T extends Object> void updateDataSerialized(String path, DataUpdater<T> updater) {
+    public <T> void updateDataSerialized(String path, DataUpdater<T> updater) {
         Stat stat = new Stat();
         boolean retry;
         do {

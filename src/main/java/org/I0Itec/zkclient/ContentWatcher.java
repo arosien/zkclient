@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
  * @param <T>
  *            The data type that is being watched.
  */
-public final class ContentWatcher<T extends Object> implements IZkDataListener {
+public final class ContentWatcher<T> implements IZkDataListener {
 
     private static final Logger LOG = Logger.getLogger(ContentWatcher.class);
 
