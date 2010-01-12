@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
@@ -11,7 +12,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.exception.ZkTimeoutException;
+import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
@@ -205,6 +208,51 @@ public abstract class AbstractBaseZkClientTest {
             }
         }, TimeUnit.SECONDS, 5);
         assertEquals(2, countChanged.get());
+    }
+    
+    @Test
+    public void testDataChanges3() throws Exception {
+        LOG.info("--- testDataChanges3");
+        String path = "/a";
+        final Holder<String> holder = new Holder<String>();
+
+        IZkDataListener listener = new IZkDataListener() {
+
+            @Override
+            public void handleDataChange(String dataPath, Object data) throws Exception {
+                holder.set((String) data);
+            }
+
+            @Override
+            public void handleDataDeleted(String dataPath) throws Exception {
+                holder.set(null);
+            }
+        };
+        // Pass in custom serializer.
+        _client.subscribeDataChanges(path, listener, new ZkSerializer() {
+            
+            @Override
+            public byte[] serialize(Object data) throws ZkMarshallingError {
+                throw new AssertionError("serialize() should never be called in this test");
+            }
+            
+            @Override
+            public Object deserialize(byte[] bytes) throws ZkMarshallingError {
+                return "unserialized";
+            }
+        });
+        _client.createPersistent(path, "superSecretSerialization");
+
+        // wait some time to make sure the event was triggered
+        String contentFromHolder = TestUtil.waitUntil("b", new Callable<String>() {
+
+            @Override
+            public String call() throws Exception {
+                return holder.get();
+            }
+        }, TimeUnit.SECONDS, 5);
+
+        assertEquals("unserialized", contentFromHolder);
     }
 
     @Test(timeout = 15000)

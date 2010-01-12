@@ -44,6 +44,7 @@ public class ZkClient implements Watcher {
     protected IZkConnection _connection;
     private final Map<String, Set<IZkChildListener>> _childListener = new ConcurrentHashMap<String, Set<IZkChildListener>>();
     private final ConcurrentHashMap<String, Set<IZkDataListener>> _dataListener = new ConcurrentHashMap<String, Set<IZkDataListener>>();
+    private final ConcurrentHashMap<IZkDataListener, ZkSerializer> _dataListenerSerializers = new ConcurrentHashMap<IZkDataListener, ZkSerializer>();
     private final Set<IZkStateListener> _stateListener = new CopyOnWriteArraySet<IZkStateListener>();
     private KeeperState _currentState;
     private final ZkLock _zkEventLock = new ZkLock();
@@ -109,6 +110,10 @@ public class ZkClient implements Watcher {
     }
 
     public void subscribeDataChanges(String path, IZkDataListener listener) {
+        subscribeDataChanges(path, listener, _zkSerializer);
+    }
+    
+    public void subscribeDataChanges(String path, IZkDataListener listener, ZkSerializer serializer) {
         Set<IZkDataListener> listeners;
         synchronized (_dataListener) {
             listeners = _dataListener.get(path);
@@ -117,6 +122,7 @@ public class ZkClient implements Watcher {
                 _dataListener.put(path, listeners);
             }
             listeners.add(listener);
+            _dataListenerSerializers.put(listener, serializer);
         }
         watchForData(path);
         LOG.debug("Subscribed data changes for " + path);
@@ -131,6 +137,7 @@ public class ZkClient implements Watcher {
             if (listeners == null || listeners.isEmpty()) {
                 _dataListener.remove(path);
             }
+            _dataListenerSerializers.remove(dataListener);
         }
     }
 
@@ -152,6 +159,7 @@ public class ZkClient implements Watcher {
         }
         synchronized (_dataListener) {
             _dataListener.clear();
+            _dataListenerSerializers.clear();
         }
         synchronized (_stateListener) {
             _stateListener.clear();
@@ -627,7 +635,7 @@ public class ZkClient implements Watcher {
                     // reinstall watch
                     exists(path, true);
                     try {
-                        Object data = readData(path, null, true, _zkSerializer);
+                        Object data = readData(path, null, true, _dataListenerSerializers.get(listener));
                         listener.handleDataChange(path, data);
                     } catch (ZkNoNodeException e) {
                         listener.handleDataDeleted(path);
